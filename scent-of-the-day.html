@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scent of the Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #f5f0e8;
+    --ink: #1a1714;
+    --mist: #8a8480;
+    --gold: #b8a070;
+    --warm: #e8dfd0;
+  }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  /* Decorative circle */
+  .bg-circle {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,160,112,0.08) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .header-label {
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 38px;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--mist);
+  }
+
+  /* Weather strip */
+  .weather-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--warm);
+    border: 1px solid rgba(184,160,112,0.2);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.15s forwards;
+  }
+
+  .weather-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .weather-text {
+    flex: 1;
+  }
+
+  .weather-location {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-bottom: 2px;
+  }
+
+  .weather-desc {
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 300;
+  }
+
+  .weather-temp {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+
+  /* Main recommendation */
+  .recommendation {
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.3s forwards;
+  }
+
+  .rec-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-bottom: 20px;
+  }
+
+  .scent-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 52px;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -1px;
+  }
+
+  .scent-house {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+
+  .divider {
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+    margin-bottom: 24px;
+  }
+
+  .reasoning {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.65;
+    color: #3d3830;
+    margin-bottom: 32px;
+  }
+
+  /* Collection pills */
+  .collection-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-bottom: 12px;
+  }
+
+  .collection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border: 1px solid rgba(26,23,20,0.15);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--mist);
+    transition: all 0.2s;
+  }
+
+  .pill.active {
+    background: var(--ink);
+    color: var(--cream);
+    border-color: var(--ink);
+  }
+
+  /* Button */
+  .refresh-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .refresh-btn:hover {
+    background: #2d2925;
+  }
+
+  .refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Loading state */
+  .loading-ring {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(184,160,112,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 60px auto;
+  }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--mist);
+    text-align: center;
+    padding: 40px 0;
+    line-height: 1.6;
+  }
+
+  /* Date */
+  .date-line {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mist);
+    text-align: center;
+    margin-top: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.5s forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .content-area {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="bg-circle"></div>
+
+<div class="card">
+  <div class="header">
+    <div class="header-label">Daily Ritual</div>
+    <h1>Scent of<br><em>the Day</em></h1>
+  </div>
+
+  <div class="weather-strip" id="weatherStrip" style="display:none">
+    <span class="weather-icon" id="weatherIcon">🌤</span>
+    <div class="weather-text">
+      <div class="weather-location" id="weatherLocation">Loading…</div>
+      <div class="weather-desc" id="weatherDesc"></div>
+    </div>
+    <div class="weather-temp" id="weatherTemp"></div>
+  </div>
+
+  <div class="content-area">
+    <div class="loading-ring" id="loadingRing"></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="recommendation" id="recBlock" style="display:none">
+      <div class="rec-label">Today's Recommendation</div>
+      <div class="scent-name" id="scentName"></div>
+      <div class="scent-house" id="scentHouse"></div>
+      <div class="divider"></div>
+      <div class="reasoning" id="reasoning"></div>
+
+      <div class="collection-label">Your Collection</div>
+      <div class="collection" id="collectionPills"></div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" id="refreshBtn" onclick="run()">
+    Suggest Today's Scent
+  </button>
+
+  <div class="date-line" id="dateLine"></div>
+</div>
+
+<script>
+const SCENTS = [
+  { name: "Hwyl",        house: "Aesop",    type: "Eau de Parfum" },
+  { name: "Karst",       house: "Aesop",    type: "Eau de Parfum" },
+  { name: "Super Cedar", house: "Byredo",   type: "Eau de Parfum" },
+  { name: "Eau des Sens",house: "Diptyque", type: "Travel Spray"  },
+  { name: "Ilio",        house: "Diptyque", type: "Travel Spray"  },
+  { name: "Orphéon",     house: "Diptyque", type: "Travel Spray"  },
+  { name: "Do Son",      house: "Diptyque", type: "Travel Spray"  },
+  { name: "Philosykos",  house: "Diptyque", type: "Travel Spray"  },
+];
+
+const WEATHER_ICONS = {
+  Clear: "☀️", Sunny: "☀️", "Partly cloudy": "⛅",
+  Overcast: "☁️", Cloudy: "☁️", Mist: "🌫️",
+  Rain: "🌧️", Drizzle: "🌦️", Snow: "❄️",
+  Thunder: "⛈️", Fog: "🌫️"
+};
+
+function getWeatherIcon(desc) {
+  for (const [k, v] of Object.entries(WEATHER_ICONS)) {
+    if (desc.toLowerCase().includes(k.toLowerCase())) return v;
+  }
+  return "🌡️";
+}
+
+function setDate() {
+  const d = new Date();
+  document.getElementById("dateLine").textContent =
+    d.toLocaleDateString("en-GB", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+}
+
+function show(id)  { document.getElementById(id).style.display = ""; }
+function hide(id)  { document.getElementById(id).style.display = "none"; }
+function block(id) { document.getElementById(id).style.display = "block"; }
+
+function showError(msg) {
+  hide("loadingRing");
+  hide("recBlock");
+  const el = document.getElementById("errorMsg");
+  el.textContent = msg;
+  block("errorMsg");
+  document.getElementById("refreshBtn").disabled = false;
+}
+
+async function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject("Geolocation not supported");
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      () => reject("Location access denied — please allow location and try again.")
+    );
+  });
+}
+
+async function getWeather(lat, lon) {
+  const res = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=auto`
+  );
+  const data = await res.json();
+  const c = data.current;
+
+  const WMO = {
+    0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",
+    45:"Foggy",48:"Icy fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",
+    61:"Light rain",63:"Rain",65:"Heavy rain",71:"Light snow",73:"Snow",75:"Heavy snow",
+    80:"Rain showers",81:"Rain showers",82:"Heavy rain showers",
+    95:"Thunderstorm",96:"Thunderstorm with hail",99:"Heavy thunderstorm"
+  };
+
+  const desc = WMO[c.weathercode] || "Variable";
+  return {
+    temp: Math.round(c.temperature_2m),
+    desc,
+    wind: Math.round(c.windspeed_10m),
+    humidity: c.relativehumidity_2m,
+    icon: getWeatherIcon(desc)
+  };
+}
+
+async function reverseGeocode(lat, lon) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const d = await res.json();
+    return d.address?.city || d.address?.town || d.address?.village || d.address?.county || "Your Location";
+  } catch { return "Your Location"; }
+}
+
+async function askClaude(weather, city) {
+  const scentList = SCENTS.map(s => `${s.name} by ${s.house} (${s.type})`).join(", ");
+  const prompt = `You are a refined fragrance expert. Based on today's weather, recommend exactly ONE fragrance from this collection.
+
+COLLECTION: ${scentList}
+
+WEATHER TODAY in ${city}:
+- Temperature: ${weather.temp}°C
+- Conditions: ${weather.desc}
+- Wind: ${weather.wind} km/h
+- Humidity: ${weather.humidity}%
+
+Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
+{"name":"EXACT_SCENT_NAME","house":"BRAND","reason":"A single evocative sentence (max 30 words) connecting this weather to this scent's character and why it suits the moment perfectly."}
+
+The "name" must match exactly one of the scent names listed above.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+
+  const data = await res.json();
+  const raw = data.content.map(b => b.text || "").join("").trim();
+  const clean = raw.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+}
+
+async function run() {
+  const btn = document.getElementById("refreshBtn");
+  btn.disabled = true;
+  hide("errorMsg");
+  hide("recBlock");
+  hide("weatherStrip");
+  block("loadingRing");
+
+  try {
+    const { lat, lon } = await getLocation();
+    const [weather, city] = await Promise.all([
+      getWeather(lat, lon),
+      reverseGeocode(lat, lon)
+    ]);
+
+    // Show weather strip
+    document.getElementById("weatherIcon").textContent = weather.icon;
+    document.getElementById("weatherLocation").textContent = city.toUpperCase();
+    document.getElementById("weatherDesc").textContent = `${weather.desc} · ${weather.humidity}% humidity`;
+    document.getElementById("weatherTemp").textContent = `${weather.temp}°`;
+    show("weatherStrip");
+
+    const rec = await askClaude(weather, city);
+
+    // Find matched scent
+    const matched = SCENTS.find(s => s.name.toLowerCase() === rec.name.toLowerCase()) || SCENTS[0];
+
+    document.getElementById("scentName").textContent = matched.name;
+    document.getElementById("scentHouse").textContent = `${matched.house} — ${matched.type}`;
+    document.getElementById("reasoning").textContent = rec.reason;
+
+    // Pills
+    const pillsEl = document.getElementById("collectionPills");
+    pillsEl.innerHTML = "";
+    SCENTS.forEach(s => {
+      const pill = document.createElement("div");
+      pill.className = "pill" + (s.name === matched.name ? " active" : "");
+      pill.textContent = s.name;
+      pillsEl.appendChild(pill);
+    });
+
+    hide("loadingRing");
+    document.getElementById("recBlock").style.display = "block";
+    document.getElementById("recBlock").style.animation = "fadeUp 0.6s ease forwards";
+
+  } catch(err) {
+    showError(typeof err === "string" ? err : "Something went wrong. Please try again.");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+setDate();
+</script>
+</body>
+</html>
